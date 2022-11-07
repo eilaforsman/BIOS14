@@ -1,6 +1,6 @@
 setwd("~/Documents/Documents/R/Statcourse/Exersice 2")
 
-#Section 1####
+#Basic regression####
 
 set.seed(85)
 x = rnorm(n=200, mean=10, sd=2)
@@ -64,3 +64,121 @@ SE
 cov(y,x)/var(x)
 coefs = summary(m)$coef
 (coefs[2,1]*(mean(x) + sd(x))) - (coefs[2,1]*mean(x)) #calculate change in y for 1 change in SDx
+cor(x,y)^2
+
+
+y_hat = coefs[1,1] + coefs[2,1]*x
+var(y_hat)
+var(y_hat)/var(y)
+
+coefs[2,1]^2*var(x)
+
+newx = seq(min(x), max(x), length.out=200)
+predy = coefs[1,1] + coefs[2,1]*newx #genetates new predicted y values
+
+plot(x, y, las=1,
+     xlab="Leaf length (mm)",
+     ylab="Leaf width (mm)")
+lines(newx, predy)
+
+
+#Errors in x####
+
+rm(list=ls())
+
+
+x = rnorm(500, 10, 2)
+y = 1.5*x + rnorm(500, 0, 1)
+slope_est = NULL
+errors = seq(0.01, 0.5, length.out=10)
+errors
+relerrors = (errors^2)/var(x)
+
+for(i in 1:10){
+  x_obs = x + rnorm(500, 0, errors[i])
+  m1 = lm(y~x_obs)
+  slope_est[i] = summary(m1)$coef[2,1]
+}
+
+
+plot(errors, slope_est,
+     las=1,
+     xlab="Error standard deviation in x",
+     ylab="Estimated slope")
+
+relerrors
+corrslope = slope_est/(1-relerrors)
+
+plot(errors, slope_est,
+     ylim= c(1.4, 1.55),
+     las=1,
+     xlab="Error standard deviation in x",
+     ylab="Estimated slope")
+points(errors, corrslope, pch=16)
+segments(errors, slope_est, errors, corrslope)
+
+#Errors in y####
+rm(list=ls())
+
+
+x = rnorm(500, 10, 2)
+y = 1.5*x + rnorm(500, 0, 1)
+slope_est = NULL
+errors = seq(0.01, 0.5, length.out=10)
+errors
+relerrors = (errors^2)/var(y)
+
+for(i in 1:10){
+  y_obs = y + rnorm(500, 0, errors[i])
+  m1 = lm(x~y_obs)
+  slope_est[i] = summary(m1)$coef[2,1]
+}
+
+
+plot(errors, slope_est,
+     las=1,
+     xlab="Standard deviation in x",
+     ylab="Error estimated slope")
+
+relerrors
+corrslope = slope_est/(1-relerrors)
+
+plot(errors, slope_est,
+     ylim= c(0.59, 0.64),
+     las=1,
+     xlab="Standard deviation in x",
+     ylab="Error estimated slope")
+points(errors, corrslope, pch=16)
+segments(errors, slope_est, errors, corrslope)
+
+#Model real data####
+
+rm(list=ls())
+
+birds = read.csv("bird_allometry.csv", sep=',')
+head(birds)
+
+hist(birds$brain_mass)
+hist(birds$body_mass)
+qqnorm(birds$body_mass)
+qqnorm(birds$brain_mass)
+
+logbrain <- log(birds$brain_mass)
+birds$logbrain <- logbrain
+
+hist(birds$logbrain)
+qqnorm(birds$logbrain)
+
+logmass <- log(birds$body_mass)
+birds$logmass <- logmass
+
+hist(birds$logmass)
+qqnorm(birds$logmass)
+
+m = lm(birds$logmass~birds$logbrain)
+
+plot(birds$logmass~birds$logbrain,
+  las=1,
+  xlab="Log body mass (g)",
+  ylab="Log brain mass (g)")
+abline(m)

@@ -56,6 +56,10 @@ for (i in 1:1000) {
 } #doing the V row sampling 1000 times in a loop
 
 plot(out)
+hist(out)
+
+SE <- sqrt(var(out)/length(out))
+SE
 
 cov(y,x)/var(x)
 coefs = summary(m)$coef

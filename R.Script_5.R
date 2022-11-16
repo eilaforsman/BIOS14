@@ -81,6 +81,15 @@ lines(x_pred, p_hat, lty=1) #Lägg till sigmoid kurva mellan x_pred och p
 abline( h=0.5, lty=2) #lägg till horisontell linje för y=0.5
 abline(v=4.182042, lty=2) #lägg till vertikal linje för x=4.182042
 
-library(MuMIn)
+#The coefficent of discrimination is defined as D =  mean_hat_π1 − mean_hat_ˆπ0
+
+y_hat = coefs[1,1] + coefs[2,1]*x
+p_hat = invlogit(y_hat)
+mean(p_hat[which(y==1)]) - mean(p_hat[which(y==0)]) #[1] 0.105637 calculate Tjur's D
+
+
+
+
+
 
 

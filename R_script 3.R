@@ -1,6 +1,6 @@
 #Exersice 3####
 
-setwd("~/Documents/Documents/R/Statcourse/Exersice 3")
+setwd("~/Documents/Documents/R/Statcourse/BIOS14")
 
 rm(list=ls())
 

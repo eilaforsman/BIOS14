@@ -41,7 +41,7 @@ plot(x, y, las=1)
 
 
 m = glm(y~x, family="poisson") #Note residual deviance to check for overdispersion 
-#(residual deviance/df)
+#(residual deviance/df) 0.7-1.3 is good
 summary(m)
 
 #As in all GLMs, the parameters are reported on the link scale, here log. 
@@ -56,7 +56,9 @@ summary(m)
 #To plot the fitted regression line, we have to back-transform the predicted values.
 plot(x, y, las=1, col="darkgrey", pch=16)
 xx = seq(min(x), max(x), 0.01)
-y_hat = predict(m, newdata=list(x=xx), type="response", se.fit=T)
+y_hat = predict(m, newdata=list(x=xx), type="response", se.fit=T) 
+#predict(model, newdata=list(), type=response does back transformation automatically, 
+#link presents link scale)
 lines(xx, y_hat$fit)
 
 #lines(xx, y_hat$fit+1.96*y_hat$se.fit, lty=2)  (Adds dotted line for + 1SE)
@@ -115,28 +117,41 @@ rm(list=ls())
 dat = read.csv("Eulaema.csv")
 head(dat)
 
-m = glm(dat$altitude~dat$Eulaema_nigrita)
+hist(dat$altitude)
+m = glm.nb (dat$Eulaema_nigrita~dat$Pseason)
 summary(m)
 
-m1 = glm(dat$MAT~dat$Eulaema_nigrita)
+hist(dat$MAT)
+m1 = glm.nb (dat$Eulaema_nigrita~dat$MAT)
 summary(m1)
 
-m2 = glm(dat$MAP~dat$Eulaema_nigrita)
+hist(dat$MAP)
+m2 = glm.nb(dat$Eulaema_nigrita~dat$MAP)
 summary(m2)
 
-m3 = glm(dat$lu_het~dat$Eulaema_nigrita)
+hist(dat$lu_het)
+m3 = glm.nb (dat$Eulaema_nigrita~dat$lu_het)
 summary(m3)
 
+hist(dat$forest.)
+m4 = glm.nb(dat$Eulaema_nigrita~dat$forest.)
+summary(m4)
 
 
+m5 = glm.nb (dat$Eulaema_nigrita ~ dat$Pseason + dat$lu_het)
+summary(m5)
 
+#Medelantal bin är e^2.4428 = 11,5, om land use ändras en enhet ökar bin e^0.6=1.8, 
+#om Pseason ändras ökar bin med e^0.025=1.
 
+x1_m = (dat$Pseason - mean(dat$Pseason))/mean(dat$Pseason)
+x2_m = (dat$lu_het - mean(dat$lu_het))/mean(dat$lu_het)
+summary(lm(dat$Eulaema_nigrita ~ x1_m + x2_m))
 
+m5 = glm.nb (dat$Eulaema_nigrita ~ x1_m + x2_m)
+summary(m5) #Comparable effect of predictors, Pseason higher impact than lu_het OBS still log
 
-
-
-
-
+plot(dat$Eulaema_nigrita ~ dat$Pseason + dat$lu_het) #KAOS
 
 #Hurdle models####
 

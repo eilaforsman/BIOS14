@@ -88,6 +88,72 @@ p_hat = invlogit(y_hat)
 mean(p_hat[which(y==1)]) - mean(p_hat[which(y==0)]) #[1] 0.105637 calculate Tjur's D
 
 
+#Seed germination####
+
+rm(list=ls())
+
+dat = read.csv("dormancy.csv")
+names(dat)
+
+subdat = dat[dat$pop=="CC",]
+
+germ = subdat$nseed * subdat$germ2 #Calculate successses
+notgerm = subdat$nseed - germ #Calculate failiures
+
+mod1 = glm(cbind(germ, notgerm) ~ timetosowing, "binomial", data=subdat)
+#Need to create success and fail variables first
+mod2 = glm(germ2 ~ timetosowing, "binomial", weights=nseed, data=subdat) 
+#Can be done without calculating success and fail first
+logLik(mod1) == logLik(mod2)
+
+
+summary(mod2)
+
+plot(subdat$germ2 ~ subdat$timetosowing, las=1,
+     xlab = "Duration of after-ripening (days)",
+     ylab = "Germination rate")
+
+# Need a continuous variable that describes the germination vs time to see where germination = 0.5
+
+mod3 = glm(germ2 ~ timetosowing + MCseed, "binomial", weights=nseed, data=subdat)
+summary(mod3)
+
+
+plot(subdat$germ2 ~ subdat$timetosowing, las=1,
+     xlab = "Duration of after-ripening (days)",
+     ylab = "Germination rate")
+xvals = seq(min(subdat$timetosowing, na.rm=T),
+            max(subdat$timetosowing, na.rm=T), 0.01) #create x-values for line
+
+#y-value in the form y=k*x+m where m is model intercept, k is slope from model, x from above
+
+coefs = summary(mod3)$coef
+y_hat = coefs[1,1] + coefs[2,1]*xvals
+
+invlogit = function(x) 1/(1+exp(-x))
+
+lines(xvals, invlogit(y_hat)) #need to inverse logit y value because model gives log link
+
+y_hat2 = coefs[1,1] + coefs[2,1]*xvals + coefs[3,1]*sd(subdat$MCseed) 
+#Same as first line but add +1SD in seed size
+lines(xvals, invlogit(y_hat2), lty=2)
+
+y_hat3 = coefs[1,1] + coefs[2,1]*xvals - coefs[3,1]*sd(subdat$MCseed)
+lines(xvals, invlogit(y_hat3), lty=2) #Same as y_hat 2 but -1SD in seed size
+
+
+-coefs[1,1]/coefs[2,1] #Intercept divided by slope to get time at which GR is 0.5 =106,72
+
+#After 106.7274 days germination rate is at 50%
+#How does seed size affect germination rate i.e. x-value for +/- 1SD?
+
+-(coefs[1,1] + coefs[3,1]*sd(subdat$MCseed))/coefs[2,1] #129.424 days
+-(coefs[1,1] - coefs[3,1]*sd(subdat$MCseed))/coefs[2,1] #84.03079 days
+
+#Results: The probability of germination increased with after-ripening.
+#An averaged sized seed will have a 50% chance of germination after 106.7 days.
+#For seeds 1SD smaller or larger than the mean ripening time will change to 84 days 
+#and 129.4 days, respectively 
 
 
 

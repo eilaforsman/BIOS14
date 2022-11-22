@@ -182,3 +182,79 @@ y = -2 + 1.5*x + rnorm(200, 0, 5)
 y[101:200] = 2 + 0.95*x[101:200] + rnorm(100, 0, 6)
 
 plot(x, y, pch=c(1,16)[as.numeric(gr)], las=1)
+
+m = lm(y~x*gr)
+anova(m) #Note Sum of Square to se what has most effect
+summary(m) #Male slope steeper. By summing female slope (x) and interaction (x:grMale)
+
+#If we want to extract the male and female slopes and intercepts with their 
+#standard errors, we can reformulate the model by suppressing the global intercept.
+
+m2 = lm(y ~ -1 + gr + x:gr)
+summary(m2) # gr:x is slope, gr is intercept
+
+#Note that this is actually the same model as before, formulated in a different way. 
+#We can confirm this by checking that the log likelihood of the model remains unchanged.
+
+logLik(m)
+logLik(m2)
+
+#Data exersice Blossom####
+
+rm(list=ls())
+blossoms = read.csv("blossoms.csv")
+names(blossoms)
+head(blossoms)
+
+tapply(blossoms$UBW, blossoms$pop,  mean, na.rm=T) #get the mean upper bract width in each pop
+
+library(plyr)
+library(knitr)
+
+popstats = ddply(blossoms, .(pop), summarize,
+                 UBWm = mean(UBW, na.rm=T),
+                 UBWsd = sd(UBW, na.rm=T),
+                 LBWm = mean(LBW, na.rm=T),
+                 LBWsd = sd(LBW, na.rm=T),
+                 GSDm = mean(GSD, na.rm=T),
+                 GSDsd = sd(GSD, na.rm=T),
+                 ASDm = mean(ASD, na.rm=T),
+                 ASDsd = sd(ASD, na.rm=T))
+popstats[,-1] = round(popstats[,-1], 2) # Only 2 decimal points
+kable(popstats) #Show popstats in a table
+
+hist(blossoms$LBW)
+hist(blossoms$UBW)
+
+plot(blossoms$LBW ~ blossoms$UBW, las=1,
+     xlab= "Upper bract width (mm)",
+     ylab= "Lower bract width(mm)")
+
+m = lm(blossoms$LBW ~ blossoms$UBW)
+summary(m) # Positive slope and lot of variance explained aka there is a positive relationship 
+          # between UBW and LBW but not very biologically interesting
+
+
+plot(log(blossoms$LBW), log(blossoms$UBW), ylim=c(1,3.5), las=1,
+     xlab="Lower bract width( log mm)",
+     ylab="UBW/GSD (log mm)")
+points(log(blossoms$LBW), log(blossoms$GSD), pch=16) #You can add points to a scatterplot
+
+mUBW = lm(UBW ~ pop, data=blossoms)
+anova(mUBW)
+summary(mUBW) #There are differences in UBW between pops
+
+mGSD = lm(GSD ~ pop, data=blossoms)
+anova(mGSD)
+summary(mGSD) #Not very varied between pops, slight support for diff between S1 and S27
+              # Not a lot of variance explained
+
+m = lm(GSD ~ UBW*pop, data=blossoms)
+anova(m)
+summary(m)
+
+mlog = lm(log(GSD) ~ log(UBW)*pop, data=blossoms)
+anova(mlog) # GSD is dependent on UBW and pop
+summary(mlog) #pop S20 has largest GSD and UBW
+
+

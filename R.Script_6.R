@@ -141,17 +141,54 @@ summary(m4)
 m5 = glm.nb (dat$Eulaema_nigrita ~ dat$Pseason + dat$lu_het)
 summary(m5)
 
-#Medelantal bin är e^2.4428 = 11,5, om land use ändras en enhet ökar bin e^0.6=1.8, 
-#om Pseason ändras ökar bin med e^0.025=1.
+m6 = glm.nb (Eulaema_nigrita ~ forest. + Pseason, data=dat)
+summary(m6)
 
-x1_m = (dat$Pseason - mean(dat$Pseason))/mean(dat$Pseason)
-x2_m = (dat$lu_het - mean(dat$lu_het))/mean(dat$lu_het)
+
+1-m$deviance/m$null.deviance
+#[1] 0.114557
+
+
+#Antal bin kan förklaras av Pseason och forest.
+
+x2_m = (dat$Pseason - mean(dat$Pseason))/mean(dat$Pseason)
+x1_m = (dat$forest. - mean(dat$forest.))/mean(dat$forest.)
 summary(lm(dat$Eulaema_nigrita ~ x1_m + x2_m))
 
-m5 = glm.nb (dat$Eulaema_nigrita ~ x1_m + x2_m)
-summary(m5) #Comparable effect of predictors, Pseason higher impact than lu_het OBS still log
 
-plot(dat$Eulaema_nigrita ~ dat$Pseason + dat$lu_het) #KAOS
+m7 = glm.nb (dat$Eulaema_nigrita ~ x1_m + x2_m)
+summary(m7) #Comparable effect of predictors, OBS still log
+
+plot(dat$Eulaema_nigrita ~ dat$forest., las=1,
+     xlab = "Forest cover",
+     ylab = "Number of bees") 
+
+#Skapar kontinuerlig linje från model
+
+xvals = seq(min(dat$forest.), max(dat$forest.), length.out = 200)
+newP = rep(mean(dat$Pseason), length(xvals))
+
+
+y_hat = predict(m6, newdata=list(Pseason=newP, forest.=xvals), type="response") 
+
+
+plot(log(dat$Pseason), dat$Eulaema_nigrita, las=1,
+     xlab = "Seasonal Precipitation (mm)",
+     ylab = "Antal bin  (st)") 
+lines(xvals, y_hat, lwd=2)
+
+newP2 = rep(mean(dat$Pseason) + sd(dat$Pseason), length(xvals))
+y_hat2 = predict(m6, newdata=list(Pseason=newP2, forest.=xvals), type="response")
+
+newP3 = rep(mean(dat$Pseason) - sd(dat$Pseason), length(xvals))
+y_hat3 = predict(m6, newdata=list(Pseason=newP3, forest.=xvals), type="response")
+
+plot(log(dat$Pseason), dat$Eulaema_nigrita, las=1,
+     xlab = "Seasonal Precipitation (mm)",
+     ylab = "Antal bin  (st)") 
+lines(xvals, y_hat, lwd=2, col="black")
+lines(xvals, y_hat2, lwd=2, col="red")
+lines(xvals, y_hat3, lwd=2, col="blue")
 
 #Hurdle models####
 

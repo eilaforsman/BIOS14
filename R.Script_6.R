@@ -148,8 +148,10 @@ summary(m6)
 1-m$deviance/m$null.deviance
 #[1] 0.114557
 
+#Question: Are the amount of bees affected by degree of forest cover?
+#Method: To access the effects of forest cover on bees a generalized linear model
+#was fitted with log link and seasonal precipitation as a covariate.
 
-#Antal bin kan förklaras av Pseason och forest.
 
 x2_m = (dat$Pseason - mean(dat$Pseason))/mean(dat$Pseason)
 x1_m = (dat$forest. - mean(dat$forest.))/mean(dat$forest.)
@@ -170,12 +172,12 @@ newP = rep(mean(dat$Pseason), length(xvals))
 
 
 y_hat = predict(m6, newdata=list(Pseason=newP, forest.=xvals), type="response") 
+length(y_hat)
 
-
-plot(log(dat$Pseason), dat$Eulaema_nigrita, las=1,
+plot(dat$forest., dat$Eulaema_nigrita, las=1,
      xlab = "Seasonal Precipitation (mm)",
      ylab = "Antal bin  (st)") 
-lines(xvals, y_hat, lwd=2)
+lines(xvals, y_hat, lwd=2,col="black")
 
 newP2 = rep(mean(dat$Pseason) + sd(dat$Pseason), length(xvals))
 y_hat2 = predict(m6, newdata=list(Pseason=newP2, forest.=xvals), type="response")
@@ -183,12 +185,15 @@ y_hat2 = predict(m6, newdata=list(Pseason=newP2, forest.=xvals), type="response"
 newP3 = rep(mean(dat$Pseason) - sd(dat$Pseason), length(xvals))
 y_hat3 = predict(m6, newdata=list(Pseason=newP3, forest.=xvals), type="response")
 
-plot(log(dat$Pseason), dat$Eulaema_nigrita, las=1,
-     xlab = "Seasonal Precipitation (mm)",
+plot(dat$forest., dat$Eulaema_nigrita, las=1,
+     xlab = "Forest",
      ylab = "Antal bin  (st)") 
 lines(xvals, y_hat, lwd=2, col="black")
 lines(xvals, y_hat2, lwd=2, col="red")
 lines(xvals, y_hat3, lwd=2, col="blue")
+
+#Results: There are more bees in less forested areas with increase in seasonal precipitation 
+#by 1sd leads to an increase of 56 bees.
 
 #Hurdle models####
 

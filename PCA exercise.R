@@ -166,13 +166,76 @@ biplot(pca, col=c("grey", "black"), cex=c(.5, 1))
 rm(list=ls())
 dat = read.csv("blossoms.csv")
 
+head(dat)
+data = na.omit(dat)
+means2 = c(apply(data[,3:5], 2, mean))
+
+plot(dat$ASD, dat$GAD, las=1)
+lines(ellipse(cov(data[,3:4]), centre=means2))
+        
+cm = cov(data[,3:5]) #Create matrix with covariance in data
+
+eigen(cm)
+
+eigen(cm)$values/sum(eigen(cm)$values) #Variance in data explained by each vector
+
+eigen(cm)$vectors %*% diag(eigen(cm)$values) %*% solve(eigen(cm)$vectors) #Reconstruct data
 
 
+dim(as.matrix(data)) 
+dim(as.matrix(eigen(cm)$vectors[,1]))
 
+t1 = as.matrix(data[3:5]) %*% eigen(cm)$vectors[,1]
+t2 = as.matrix(data[3:5]) %*% eigen(cm)$vectors[,2]
+t3 = as.matrix(data[3:5]) %*% eigen(cm)$vectors[,3]
 
+c(var(data[,3]), var(data[,4]), var(data[,5]))
+c(var(t1), var(t2), var(t3))
 
+pca = princomp(data[3:5])
+summary(pca)
 
+#Principal component regression
+XX = as.data.frame(scale(X))
+y = 0.5*XX$z1 -0.3*XX$z2 + 0.2*XX$z3 + rnorm(200, 0, 1)
+m0 = lm(y~XX$z1+XX$z2+XX$z3)
+summary(m0)
 
+pca=princomp(XX) #Principal component analysis
+pc1 = pca$scores[,1] #Vectors with PCs extracted from pca
+pc2 = pca$scores[,2]
+pc3 = pca$scores[,3]
+
+m3 = lm(y~pc1+pc2+pc3) #Fit model with PCs as predictors, Note r2 is the same
+summary(m3)
+
+#This is expected because we have just reorganized the original variables 
+#into new variables. In fact, we can calculate the slopes of the standard 
+#model from the slopes of the principal-component regression by using the 
+#loadings of the principal components, β = Qb
+#where Qis a matrix of loadings for each PC (similar to eigenvectors), 
+#and bis a vector of regression coefficients.
+
+Q = pca$loadings
+b = as.matrix(summary(m3)$coefficients[-1,1])
+dim(Q)
+dim(b)
+
+Q %*% b
+
+#These are the slopes of the standard model, so we have not necessarily 
+#learned very much new by fitting the principal component regression. 
+#But what if we fit the model to only the first principal component?
+
+m1 = lm(y~pc1)
+summary(m1)
+
+#The model explains less of the variance, but we have all the original 
+#variables represented. To understand how this translates into effects 
+#for the original variables, we have to also consider the loadings of each
+#original variable onto the principal components.
+
+pca$loadings[1:3, 1:3]
 
 
 

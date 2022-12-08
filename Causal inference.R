@@ -36,9 +36,25 @@ summary(m2a)$coef
 summary(m2b)$coef
 summary(m2c)$coef
 
+#Same on other data####
 
+#Standard multipleregression
+m1 = lm(Carex.bigelowii ~ altitude + mean_T_summer + soil_moist, data=plants)
 
+#Fit several models seperately for later causal inference
+m2a = lm(mean_T_summer ~ altitude, data=plants)
+m2b = lm(soil_moist ~ altitude, data=plants)
+m2c = lm(Carex.bigelowii ~ mean_T_summer + soil_moist, data=plants)
 
+summary(m1)
+#Issues with multicollinearity
+
+cor(plants$altitude, plants$Carex.bigelowii, "pairwise")
+#[1] 0.2882955
+
+summary(m2a)$coef
+summary(m2b)$coef
+summary(m2c)$coef
 
 
 

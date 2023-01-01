@@ -58,6 +58,48 @@ summary(m4)
 
 #The wet treatment led to bigger blossoms
 
+#Plotting treatment differences####
+
+#Create statistics for errorbars
+library(plyr)
+
+stats <- ddply(dat,"treat", summarize, N=length(UBW),
+                     mean_UBW=mean(na.omit(UBW)),
+                     sd=sd(na.omit(UBW)),
+                     se=sd/sqrt(N))
+
+#Change name of treatments
+
+stats$treat = gsub("D", "Dry", stats$treat)
+stats$treat = gsub("W", "Wet", stats$treat)
+
+#Creating barplot with errorbars
+
+library(ggplot2)
+
+ggplot(stats, aes(x=treat, y=mean_UBW, fill = treat)) +
+  geom_bar(width = 0.75, stat = "identity", position ="dodge", alpha = 0.8) +
+  geom_errorbar(data=stats, aes(ymin = mean_UBW - se, 
+                              ymax = mean_UBW + se),
+                width = 0.13) +
+  theme_classic() + 
+  scale_fill_grey() +
+  scale_y_continuous(limits = c(0,50), expand = c(0,0)) +
+  labs(y="Mean upper bract width (mm)", x="", 
+       title = "") +
+  theme(legend.position = c(0.9,0.9), 
+        legend.title = element_blank(),
+        plot.title = element_text (hjust = 0.5),
+        text = element_text(size=28, family= "Times"),
+        axis.text.x = element_text(size = 20, angle = 0,
+                                   hjust = 0.5, color = "black")) +
+  theme(axis.ticks.length=unit(.25, "mm"))
+
+ggsave("blossom_size.png", plot = last_plot(), device = "png",
+       scale = 1, width = 13, height = 8,
+       dpi = 600)
+
+
 
 
 

@@ -13,6 +13,7 @@ head(dat)
 dat$treat = as.factor(dat$treat)
 dat$pop = as.factor(dat$pop)
 dat$sp = as.factor(dat$sp)
+dat$plant = as.factor(dat$plant)
 
 dat = na.omit(dat) #remove missing values
 
@@ -23,6 +24,7 @@ hist(dat$UBW) #Normal distribution
 hist(dat$LBW) #Normal distribution
 hist(dat$UBL) #Normal distribution
 hist(dat$LBL) #Normal distribution
+hist(dat$GA) #Normal distribution
 
 plot(UBW ~ LBW, data=dat) #Basic plot of blossom size 
 
@@ -46,15 +48,55 @@ abline(m)
 #strong correlation between LBW and UBW.
 
 m2 = lm(UBW ~ treat, data=dat)
+anova(m2)
 summary(m2) #Big difference in blossom size, wet is bigger
 
-#Take non independent measurements from the same table and populations into account
+#Check variance among and within tables
 
 library(glmmTMB)
 
-m3 = glmmTMB(UBW ~ treat + (1|table) + (1|pop), dat=dat)
-summary(m3)  #Still big difference where wet is bigger
-#More variance explained by population than table
+m3 = glmmTMB(UBW ~ 1 + (1|table), dat=dat)
+summary(m3)  
+
+VarCorr(m3)
+VarAmongTable = attr(VarCorr(m3)$cond$table,"stddev")^2
+#0.117
+VarWithinTable = attr(VarCorr(m3)$cond,"sc")^2
+#14.1577804898716
+#Total variance explained by table
+VarAmongTable/(VarAmongTable+VarWithinTable)*100
+#0.8193984  Less than 1% variance explained
+
+#Check variance among and within populations
+m4 = glmmTMB(UBW ~ 1 + (1|pop), dat=dat)
+summary(m4)  
+
+VarCorr(m4)
+VarAmongPop = attr(VarCorr(m4)$cond$pop,"stddev")^2
+#0.653
+VarWithinPop = attr(VarCorr(m4)$cond,"sc")^2
+#13.7134380263794
+#Total variance explained by pop
+VarAmongPop/(VarAmongPop+VarWithinPop)*100
+#4.5451   Still not a lot of variance explained
+
+#Check variance among and within plants
+m5 = glmmTMB(UBW ~ 1 + (1|plant), dat=dat)
+summary(m5)  
+
+VarCorr(m5)
+VarAmongPlant = attr(VarCorr(m5)$cond$plant,"stddev")^2
+#0.804
+VarWithinPlant = attr(VarCorr(m5)$cond,"sc")^2
+#13.4697013860856
+#Total variance explained by plant
+VarAmongPlant/(VarAmongPlant+VarWithinPlant)*100
+#5.63273 Still not a lot of variance explained, variance explained by fixed predictor
+
+#Take variance from table and plant into account
+
+m6 = glmmTMB(UBW ~ treat + (1|table) + (1|plant), dat=dat)
+summary(m6) #Still big difference where wet is bigger
 
 #Plotting overall treatment differences####
 
@@ -99,10 +141,16 @@ ggsave("blossom_size.png", plot = last_plot(), device = "png",
 
 #Does the effect of treatment differ between species?####
 
-m4 = lm(UBW ~ sp*treat, data=dat)
-anova(m4) #Effect of both species and treatment on UBW, treatment larger effect
+m7 = lm(UBW ~ treat*sp, data=dat)
+anova(m7) #Effect of both species and treatment on UBW, treatment larger effect
 #taken from bigger sum.sq, small but detectable interaction
-summary(m4)
+summary(m7)
+
+#Suppress intercept
+m7 = lm(UBW ~ treat*sp -1, data=dat)
+anova(m7) #Effect of both species and treatment, effect of interaction as well
+#but not a lot of variance explained, most variance explained by treatment
+summary (m7)
 
 #Computing means and standard error for species in each treatment
 
@@ -111,6 +159,21 @@ means = tapply(dat$UBW, list(dat$sp, dat$treat), mean)
 se = tapply(dat$UBW, 
              list(dat$sp, dat$treat), 
              function(x) sd(x)/sqrt(sum(!is.na(x))))
+colMeans(means)
+#       D        W 
+#16.82407 21.67662 
+
+rowMeans(means)
+#       L        S 
+#20.14935 18.35134 
+
+colMeans(se)
+#D         W 
+#0.3010410 0.2740316 
+
+rowMeans(se)
+#    L         S 
+#0.2928040 0.2822687 
 
 #Plotting difference between treatments in each species####
 
@@ -144,5 +207,6 @@ points(c(1.97, 2.03), means[,2], pch=c(21,16), bg="white")
 #Add legend to topleft
 legend("topleft", c("Species", "L", "S"), 
        bty="n", pch=c(NA,21,16))
+
 
 

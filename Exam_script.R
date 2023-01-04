@@ -227,7 +227,11 @@ head(dat)
 
 dat$sex = as.factor(dat$sex) #set sex as a factor
 
+
 hist(dat$mass) #Visualizing data distribution for mass -> normal distribution
+hist(dat$age) #Checking age distribution -> non normal distribution
+
+dat$age = as.factor(dat$age) #set age as a factor
 
 plot(mass ~ sex, data=dat) #basic plot showing data distribution of mass between sexes
 

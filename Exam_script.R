@@ -1,15 +1,18 @@
 rm(list = ls()) #Clear environment
 list.files ()
 
-setwd("~/Documents/Documents/R/Statcourse/BIOS14")
+setwd("~/Documents/Documents/R/Statcourse/BIOS14") #Setting working directory
 
-dat = read.csv("exam2022_part1.csv") #Read datafile
+################################PART 1#######################################
+
+dat = read.csv("exam2022_part1.csv") #Read data file
 
 #Data sorting####
 
 str(dat)
 head(dat)
 
+#Setting treatment, pop, species and plant as factors
 dat$treat = as.factor(dat$treat)
 dat$pop = as.factor(dat$pop)
 dat$sp = as.factor(dat$sp)
@@ -28,6 +31,7 @@ hist(dat$GA) #Normal distribution
 
 plot(UBW ~ LBW, data=dat) #Basic plot of blossom size 
 
+#Fit model
 m = lm(UBW ~ LBW, data=dat) #Check that lower and upper bract width correlate
 summary(m) #Strong correlation, R=0.91
 
@@ -37,12 +41,12 @@ summary(m) #Strong correlation, R=0.91
 plot(UBW ~ LBW, data=dat, las=1,
      xlab = "Lower bract width (mm)",
      ylab = "Upper bract width (mm)")
-abline(m)
+abline(m) #Add regression line from model m
 
 #Question: Does wet/dry treatment affect blossom size and does the effect differ
 #between the two species?
 
-#Normally distributed data so parametric test are allowed
+#Normally distributed data so parametric models are used
 
 #I will use UBW as a measurement for entire blossom size since there was a 
 #strong correlation between LBW and UBW.
@@ -113,31 +117,32 @@ stats <- ddply(dat,"treat", summarize, N=length(UBW),
 stats$treat = gsub("D", "Dry", stats$treat)
 stats$treat = gsub("W", "Wet", stats$treat)
 
-#Creating barplot with errorbars
+#Creating barplot with error bars
 
 library(ggplot2)
 
-ggplot(stats, aes(x=treat, y=mean_UBW, fill = treat)) + #set plotting variables
-  geom_bar(width = 0.75, stat = "identity", position ="dodge", alpha = 0.8) + #determine plot type
+ggplot(stats, aes(x=treat, y=mean_UBW, fill = treat)) +                         #set plotting variables
+  geom_bar(width = 0.75, stat = "identity", position ="dodge", alpha = 0.8) +   #determine plot type
   geom_errorbar(data=stats, aes(ymin = mean_UBW - se, 
                               ymax = mean_UBW + se),
-                width = 0.13) + #specify error bars as mean +/- se
-  theme_classic() + #theme of plot
-  scale_fill_grey() + #set fill color to grey
-  scale_y_continuous(limits = c(0,50), expand = c(0,0)) + #set scale for y axis
+                width = 0.13) +                                                 #specify error bars as mean +/- se and set error bar width
+  theme_classic() +                                                             #theme of plot
+  scale_fill_grey() +                                                           #set fill color to grey scale
+  scale_y_continuous(limits = c(0,50), expand = c(0,0)) +                       #set length for y axis and expand 0
   labs(y="Mean upper bract width (mm)", x="", 
-       title = "") + #specify axis labels and title label
-  theme(legend.position = c(0.9,0.9), 
-        legend.title = element_blank(),
-        plot.title = element_text (hjust = 0.5),
-        text = element_text(size=28, family= "Times"),
+       title = "") +                                                            #specify text on axis labels and title, blank for title and x axis
+  theme(legend.position = c(0.9,0.9),                                           #set position of legend
+        legend.title = element_blank(),                                         #remove legend title
+        text = element_text(size=28, family= "Times"),                          #set size and font for text in plot
         axis.text.x = element_text(size = 20, angle = 0,
-                                   hjust = 0.5, color = "black")) + #set size, color, position and theme of text in plot
-  theme(axis.ticks.length=unit(1, "mm")) #set length for ticks on the axes
+                                   hjust = 0.5, color = "black")) +             #set size, angle, position and color for text on x axis
+  theme(axis.ticks.length=unit(0.25, "cm"))                                     #set length for ticks on the axes
+
+#saving plot as png at fixed size
 
 ggsave("blossom_size.png", plot = last_plot(), device = "png",
        scale = 1, width = 13, height = 8,
-       dpi = 600) #saving plot at fixed size
+       dpi = 600) 
 
 #Does the effect of treatment differ between species?####
 
@@ -208,5 +213,74 @@ points(c(1.97, 2.03), means[,2], pch=c(21,16), bg="white")
 legend("topleft", c("Species", "L", "S"), 
        bty="n", pch=c(NA,21,16))
 
+################################PART 2#######################################
 
+rm(list=ls())  #empty environment
+list.files ()
 
+dat = read.table("exam2022_part2.txt", header=T) #read new data file
+
+#Data Handling####
+
+str(dat)
+head(dat)
+
+dat$sex = as.factor(dat$sex) #set sex as a factor
+
+hist(dat$mass) #Visualizing data distribution for mass -> normal distribution
+
+plot(mass ~ sex, data=dat) #basic plot showing data distribution of mass between sexes
+
+#Does the mass of goats differ between sexes?
+
+#Fit model####
+
+m = lm(mass ~ sex, data=dat)
+anova(m) #Difference between sexes
+summary(m) #Males bigger than females
+
+#Suppress intercept
+
+m1 = lm(mass ~ sex-1, data=dat)
+summary(m1)
+confint(m1)
+
+#Calculating means, sd and se for mass#####
+
+library(plyr)
+
+stats = ddply(dat, "sex", summarize, N=length(mass),
+              mean = mean(mass),
+              sd = sd(mass),
+              se = sd/sqrt(length(mass))) 
+
+#Plotting#####
+
+#Change name of sex variable for plotting
+
+stats$sex = gsub("F", "Female", stats$sex)
+stats$sex = gsub("M", "Male", stats$sex)
+
+library(ggplot2)
+
+ggplot(stats, aes(x=sex, y=mean, fill = sex)) +                                 #Set plotting parameters
+  geom_bar(width = 0.75, stat = "identity", position ="dodge", alpha = 0.8) +   #Set type of plot and positioning of bars
+  geom_errorbar(data=stats, aes(ymin= mean - se, ymax=mean + se),               #Set error bars
+                width = 0.13, alpha = 1, position=position_dodge(0.75)) +       #Set dimensions of error bars
+  theme_classic() +                                                             #Set theme of plot
+  scale_fill_grey() +                                                           #Set color of bars to grey scale
+  scale_y_continuous(limits = c(0,50), expand = c(0,0)) +                       #Set y axis limit and expand the 0
+  labs(y="Mean mass (kg)", x="", 
+       title = "") +                                                            #Specify text on axes and title, blank for x and title
+  theme(legend.position = c(0.9,0.9),                                           #Set legend position
+        legend.title = element_blank(),                                         #Remove legend title
+        text = element_text(size=28, family= "Times"),                          #Set size and font for text in plot
+        axis.text.x = element_text(size = 20, angle = 0,
+                                   hjust = 0.5, color = "black")) +             #Set size, angle, position and color of text on x axis
+  theme(axis.ticks.length=unit(.25, "cm"))                                      #Lengthen the ticks on the axes in the graph
+
+#Save plot as PNG image and set size of image
+
+ggsave("Mass_barplot.png", plot = last_plot(), device = "png",
+       scale = 1, width = 12, height = 8,
+       dpi = 600)

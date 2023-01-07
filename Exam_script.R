@@ -97,20 +97,15 @@ VarWithinPlant = attr(VarCorr(m5)$cond,"sc")^2
 VarAmongPlant/(VarAmongPlant+VarWithinPlant)*100
 #5.63273 Still not a lot of variance explained, variance explained by fixed predictor
 
-#Take variance from table and plant into account
-
-m6 = glmmTMB(UBW ~ treat + (1|table) + (1|plant), dat=dat)
-summary(m6) #Still big difference where wet is bigger
-
 #Plotting overall treatment differences####
 
 #Create statistics for error bars
 library(plyr)
 
 stats <- ddply(dat,"treat", summarize, N=length(UBW),
-                     mean_UBW=mean(na.omit(UBW)), #calculate mean
-                     sd=sd(na.omit(UBW)), #calculate standard deviation
-                     se=sd/sqrt(N)) #calculate standard error
+               mean_UBW=mean(na.omit(UBW)), #calculate mean
+               sd=sd(na.omit(UBW)), #calculate standard deviation
+               se=sd/sqrt(N)) #calculate standard error
 
 #Change name of treatments
 
@@ -124,7 +119,7 @@ library(ggplot2)
 ggplot(stats, aes(x=treat, y=mean_UBW, fill = treat)) +                         #set plotting variables
   geom_bar(width = 0.75, stat = "identity", position ="dodge", alpha = 0.8) +   #determine plot type
   geom_errorbar(data=stats, aes(ymin = mean_UBW - se, 
-                              ymax = mean_UBW + se),
+                                ymax = mean_UBW + se),
                 width = 0.13) +                                                 #specify error bars as mean +/- se and set error bar width
   theme_classic() +                                                             #theme of plot
   scale_fill_grey() +                                                           #set fill color to grey scale
@@ -162,8 +157,8 @@ summary (m7)
 means = tapply(dat$UBW, list(dat$sp, dat$treat), mean)
 
 se = tapply(dat$UBW, 
-             list(dat$sp, dat$treat), 
-             function(x) sd(x)/sqrt(sum(!is.na(x))))
+            list(dat$sp, dat$treat), 
+            function(x) sd(x)/sqrt(sum(!is.na(x))))
 colMeans(means)
 #       D        W 
 #16.82407 21.67662 
@@ -235,7 +230,7 @@ dat$age = as.factor(dat$age) #set age as a factor
 
 plot(mass ~ sex, data=dat) #basic plot showing data distribution of mass between sexes
 
-#Does the mass of goats differ between sexes?
+#Question: Does the mass of goats differ between sexes?
 
 #Fit model####
 
